@@ -7,12 +7,11 @@ to purchase if required.
 
 ##### Working On:
 
-Function to loop through the priceChecks array is only returnig this first index nothing after.
-    **FIX**
+Function to loop through the 'pricesToBeChecked' array is only returnig this first index nothing after.
+    **FIX REQUIRED**
 
-    
 
 ### Further ideas:
 
 - Setup the aplication to run daily/weekly. 
-- Have one email with all prices on not individual ones. If none email none match your price points.
+- Have one email with all prices on not individual ones. If prices match email a none match your price points email.

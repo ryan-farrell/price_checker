@@ -12,6 +12,7 @@
   "dependencies": {
     "@sendgrid/mail": "^6.4.0",
     "dotenv": "^8.1.0",
-    "nightmare": "^3.0.2"
+    "nightmare": "^3.0.2",
+    "util": "^0.12.1"
   }
 }

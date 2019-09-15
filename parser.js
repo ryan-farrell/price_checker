@@ -1,67 +1,72 @@
 require('dotenv').config()
 const sgMail = require('@sendgrid/mail')
 const nigthmare = require('nightmare')()
-const priceChecker = require('./priceChecks')
+const { pricesToBeChecked } = require('./priceChecks')
+const { promisify } = require('util');
 
-priceArray = priceChecker.pricesToBeChecked
-
-// console.log(priceArray)
+priceArray = pricesToBeChecked
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
-// const args = priceArray
-// const url = args[0].url
-// const minPrice = args[0].price
-
-// const elementID = 'priceblock_ourprice'
-// const elementWait = `#${elementID}`
-
-
-async function checkPrice(url,minPrice) {
+async function checkPrice(url, minPrice) {
     try {
         const priceString = await nigthmare.goto(url).wait('#priceblock_ourprice').evaluate(
             () => document.getElementById('priceblock_ourprice').innerText).end()
-            
-            const priceNumber = parseFloat(priceString.replace('£', ''))
-            
-            if (priceNumber <= minPrice) {
-                await sendEmail('Price is Right',
-                `The price on ${url} has dropped below ${minPrice}.`
-                )
-            } else {
-                console.log('Price is not right yet!')
-            }
-            
-        } catch (e) {
-            await sendEmail('Email Price Checker Error', e.message)
-            throw e
-            
-        }
-    }
-    
-    
-    function sendEmail(subject, body) {
-        const email = {
-            to: process.env.EMAIL_TO_SEND,
-            from: 'price-checker@example.com',
-            subject: subject,
-            text: body,
-            html: body,
-        }
-        console.log('Running...')
-        return sgMail.send(email)
-    }
-    
-    async function allPrices(array) {
-        for (i = 0; i < array.length; i++)
-        await checkPrice(array[i].uri,array[i].price)
-        .then(
-        console.log(array),
-        console.log('Checked...')
-        )
-        
-    }
+        const priceNumber = parseFloat(priceString.replace('£', ''))
 
-    allPrices(priceArray);
-    
-    
+        if (priceNumber <= minPrice) {
+            await sendEmail('Price is Right',
+                `The price on ${url} has dropped below ${minPrice}.`)
+            console.log(`The price on ${url} has dropped below ${minPrice}.`)
+
+        } else {
+            console.log(`Price is not right yet, currently at £${priceNumber}!`)
+
+        }
+
+    } catch (e) {
+        await sendEmail('Email Price Checker Error', e.message)
+        throw e
+
+    }
+}
+
+
+function sendEmail(subject, body) {
+    const email = {
+        to: process.env.EMAIL_TO_SEND,
+        from: 'price-checker@example.com',
+        subject: subject,
+        text: body,
+        html: body,
+    }
+    console.log('Sending email...')
+    return sgMail.send(email)
+}
+
+const promisfifiedCheckPrice = promisify(checkPrice);
+
+async function allPrices(array) {
+    console.log('Checking prices...')
+    for (let i = 0; i < array.length; i++) {
+        let uri = array[i].uri
+        let price = array[i].price
+
+        /**************************************************************************/
+        /**************************************************************************/
+
+        // checkPrice(uri, price)
+
+        await promisfifiedCheckPrice(uri, price).then(() => {
+            console.log(array[i])
+            console.log(`Checked price ${i + 1}.`)
+        })
+
+        /**************************************************************************/
+        /**************************************************************************/
+    }
+    console.log('All price checks completed...')
+}
+
+allPrices(priceArray);
+
